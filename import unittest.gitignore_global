@@ -1,0 +1,81 @@
+import unittest
+
+def extract_title(markdown):
+    """
+    Extract the h1 header from markdown text.
+    
+    Args:
+        markdown (str): Markdown text to search
+        
+    Returns:
+        str: The h1 title text without the # and stripped of whitespace
+        
+    Raises:
+        Exception: If no h1 header is found
+    """
+    lines = markdown.strip().split('\n')
+    
+    for line in lines:
+        stripped_line = line.strip()
+        if stripped_line.startswith('# ') and not stripped_line.startswith('## '):
+            # Remove the '# ' and strip whitespace
+            title = stripped_line[1:].strip()
+            if title:  # Make sure there's actual content after the #
+                return title
+        elif stripped_line == '#':
+            # Handle case where there's just a # with no content
+            continue
+    
+    raise Exception("No h1 header found in markdown")
+
+class TestExtractTitle(unittest.TestCase):
+    def test_valid_title(self):
+        self.assertEqual(extract_title("# Hello"), "Hello")
+    
+    def test_title_with_whitespace(self):
+        self.assertEqual(extract_title("   #   Hello World   "), "Hello World")
+    
+    def test_multiple_lines(self):
+        markdown = """Some text
+# First Title
+## Subtitle
+"""
+        self.assertEqual(extract_title(markdown), "First Title")
+    
+    def test_no_title_raises(self):
+        with self.assertRaises(Exception):
+            extract_title("## Not an H1\nSome paragraph")
+    
+    def test_empty_markdown_raises(self):
+        with self.assertRaises(Exception):
+            extract_title("")
+    
+    def test_only_whitespace_raises(self):
+        with self.assertRaises(Exception):
+            extract_title("   \n  \n  ")
+    
+    def test_h1_with_multiple_spaces(self):
+        self.assertEqual(extract_title("#     Title with spaces     "), "Title with spaces")
+    
+    def test_h1_mixed_with_other_headers(self):
+        markdown = """## H2 Header
+### H3 Header
+# Main Title
+#### H4 Header"""
+        self.assertEqual(extract_title(markdown), "Main Title")
+    
+    def test_first_h1_returned_when_multiple(self):
+        markdown = """# First Title
+Some content
+# Second Title"""
+        self.assertEqual(extract_title(markdown), "First Title")
+    
+    def test_h1_with_special_characters(self):
+        self.assertEqual(extract_title("# Title with: special & chars!"), "Title with: special & chars!")
+    
+    def test_just_hash_no_content_raises(self):
+        with self.assertRaises(Exception):
+            extract_title("# ")
+
+if __name__ == '__main__':
+    unittest.main()
